@@ -1,0 +1,78 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
+#include <syscall.h>
+
+ 
+typedef struct{
+	struct dirent dir;
+	int fd;
+	
+}directory; 
+
+
+int getdents(unsigned int fd, struct dirent *dirp,unsigned int count)
+{
+	int result;
+	result=syscall_3(SYS_getdents,fd,((long)(dirp)),count);
+	
+        return result;
+}
+
+
+void *opendir(const char *name)
+{
+	int fd;
+	directory *d=(directory*)malloc(sizeof(directory));
+	
+	fd=open(name,O_DIRECTORY);
+	if(fd<0)
+	{
+		return NULL;
+	}
+	
+	else{
+		d->fd=fd;
+		strcpy(d->dir.d_name,name);
+		return d;
+	}
+}
+
+
+struct dirent *readdir(void *dir)
+{
+	
+	directory *d1=(directory*)dir;
+	
+	
+        struct dirent *d=(struct dirent*)malloc(sizeof(struct dirent));
+	
+	 
+		getdents(d1->fd,d,sizeof(struct dirent));
+
+	
+	return d;
+}
+
+int closedir(void* dir)
+{	//printf("1");fflush(stdout);
+	directory *x=(directory*)dir;printf("2");
+	printf("fd:%d\n",x->fd);
+	if(x!=NULL)
+	{
+		close(x->fd);
+		free(dir);
+		printf("File closed\n");
+		return 0;
+	}
+	else
+	{
+		return -1;
+	}
+}
+
+
+
+
+

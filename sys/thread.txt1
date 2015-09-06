@@ -1,0 +1,260 @@
+#include <sys/task.h>
+#include <sys/memory.h>
+#include <sys/utilities.h>
+#include <sys/paging.h>
+#include <sys/sbunix.h>
+#define VADDR 0xFFFFFFFF80000000
+
+struct task *task1 = NULL;
+struct task *task2 = NULL;
+
+char *kstrcpy(char *dest, const char *src)
+{
+	char *point= dest;
+	while ((*dest++ = *src++) != '\0');          
+	return point;
+}
+
+int i = 0;
+void yeild(struct task *current) 
+{
+	++i;
+	__asm volatile(
+		"movq %%rsp, %0"
+		:"=g"(current->stackposition)
+		:
+	  :"memory"
+	  
+	);
+	
+	
+	//printf("%p\n",current->rsp);
+	//printf("%p\n",current->stackposition);
+	//while(1);
+	//if(i==200)
+		//while(1);
+	__asm volatile(
+		"push %rax"
+		);
+		__asm volatile(
+		"movq %%rsp, %0"
+		:"=g"(current->stackposition)
+		:
+	  :"memory"
+	  
+	);
+	
+	
+	//printf("%p\n",current->rsp);
+	//printf("%p\n",current->stackposition);
+	//while(1);
+	__asm volatile(
+		"push %rbx"
+		);
+	__asm volatile(
+		"push %rcx"
+		);
+	__asm volatile(
+		"push %rdx"
+		);
+
+	__asm volatile(
+		"pushq %rbp"
+		);
+	__asm volatile(
+		"pushq %r8"
+		);
+	__asm volatile(
+		"pushq %r9"
+		);
+	__asm volatile(
+		"pushq %r10"
+		);
+	__asm volatile(
+		"pushq %r11"
+		);
+	__asm volatile(
+		"pushq %r12"
+		);
+	__asm volatile(
+		"pushq %r13"
+		);
+	__asm volatile(
+		"pushq %r14"
+		);
+		
+      //current->rsp = (uint64_t) &(current->kernel_stack[51]);
+	//Save the current rsp in task1
+	__asm volatile(
+		"movq %%rsp, %0"
+		:"=g"(current->rsp)
+		:
+	  :"memory"
+	  
+	);
+	
+	current->rsp=current->rsp+16;
+	
+	//printf("%p\n",current->rsp);
+	//printf("%p\n",current->rsp+16);
+	//printf("%p\n",current->stackposition);
+	//while(1);
+	
+	
+	
+	current = current->next;
+	
+	/* Now change the %rsp to callee rsp */
+	__asm volatile(
+		"movq %0, %%rsp;"
+		:
+		:"r"((current->rsp))
+	        :"memory"
+	);
+	__asm volatile(
+		"popq %r14"
+		);
+	__asm volatile(
+		"popq %r13"
+		);
+		
+	__asm volatile(
+		"popq %r12"
+		);
+	__asm volatile(
+		"popq %r11"
+		);
+
+	__asm volatile(
+		"popq %r10"
+		);
+	__asm volatile(
+		"popq %r9"
+		);
+	__asm volatile(
+		"popq %r8"
+		);
+	__asm volatile(
+		"popq %rbp"
+		);
+	__asm volatile(
+		"popq %rdx"
+		);
+	__asm volatile(
+		"popq %rcx"
+		);
+	if(i == 2)
+	{
+		uint64_t *addr = NULL;
+		printf("correct addr!\n");
+		printf("name:%p\n",&current->name);
+		__asm volatile(
+		"movq %%rsp, %0"
+		:"=g"(addr)
+		:
+	  :"memory"
+	);printf("addr:%p\n",addr);
+	}
+	__asm volatile(
+		"pop %rbx"
+		);
+	if(i == 2)
+	{
+		//uint64_t addr = 0;
+		printf("2nd time!\n");
+		printf("name:%p\n",&current->name);
+	}
+	__asm volatile(
+		"pop %rax"
+		);
+if(i == 2)
+	{
+		uint64_t addr = 0;
+		printf("2nd time!\n");
+		printf("name:%p\n",&current->name);
+		__asm volatile(
+		"movq %%rsp, %0"
+		:"=g"(addr)
+		:
+	  :"memory"
+	);
+		printf("addr:%p\n",addr);
+		//while(1);
+	}
+
+	__asm volatile(
+		"retq;"
+	);	
+
+
+}
+
+void thread1()
+{	
+	//int i = 0;
+	//for(i = 0; i < 2; i++)
+	//{
+		printf("hello ");
+		//while(1);
+		yeild(task1);
+	//}//
+}
+
+void thread2()
+{
+  //	int i = 0;
+	//for(i = 0; i < 2; i++)
+	//{  
+		printf("world ");
+		//while(1)
+		printf("is not enough\n");
+		//printf("curr name:%s\n",task2->next->name);
+		//while(1);
+		yeild(task2);
+		
+	//}
+}
+
+void initialize_stack1()
+{
+	uint64_t physaddr = allocate_page();
+	task1 = (struct task*)(VADDR + physaddr);
+	kstrcpy(task1->name,"Thread1");
+	
+	task1->rsp = (uint64_t) &(task1->kernel_stack[63]);
+	task1->kernel_stack[63] = (uint64_t) &thread1;
+	//printf("thread1 addr:%p\n",task1->kernel_stack[63]);
+	//printf("task1->kernel_stack[63]:%p\n",task1->kernel_stack[63]);
+}
+
+void initialize_stack2()
+{
+	uint64_t physaddr = allocate_page();
+	task2 = (struct task*)(VADDR + physaddr);
+	kstrcpy(task2->name,"Thread2");
+	task2->rsp = (uint64_t) &(task2->kernel_stack[51]);
+	task2->kernel_stack[63] = (uint64_t) &thread2;
+	task1->next = task2;
+	task2->next = task1;
+	//printf("yoo:%s\n",task2->next->next->name);
+	__asm__ __volatile__ ("movq %0, %%rsp;" :: "m"(task1->rsp));
+	//printf("task1rsp%p\n",task1->rsp);
+	//for checking initial value of stackavail
+		__asm volatile(
+		"movq %%rsp, %0"
+		:"=g"(task1->stackposition)
+		:
+	  :"memory"
+	  
+	);
+	
+	
+	//printf("%p\n",current->rsp);
+	//printf("%p\n",task1->stackposition);
+	//************//
+	
+	
+	
+	//while(1);
+	__asm volatile("retq;");
+}

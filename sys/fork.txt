@@ -1,0 +1,37 @@
+#include <sys/task.h>
+#include <sys/memory.h>
+#include <sys/utilities.h>
+#include <sys/paging.h>
+#include <sys/tarfs.h>
+#include <sys/gdt.h>
+#define VADDR 0xFFFFFFFF80000000
+
+int fork()
+{
+	struct task* child = make_task(1,"child1"));
+	struct task* parent= current_task;
+	uint64_t childpid=child->pid;
+	
+	*child=*parent;
+	child->pid =childpid;
+	child->ppid = parent->pid;
+	
+	//creating_page table
+	uint64_t *new_vir_pml4e=NULL;
+	uint64_t phy_pml4e = allocate_page();
+	child->mm->pml4 = phy_pml4e;
+	new_vir_pml4e = (uint64_t *)(VADDR + phy_pml4e);
+	int i=0;
+	
+	for(i=0;i<512;i++)
+		
+	
+	
+}
+	
+	
+	
+	
+	
+	
+	

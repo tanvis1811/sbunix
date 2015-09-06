@@ -1,0 +1,25 @@
+#include <sys/defs.h>
+#include <sys/utilities.h>
+#include<sys/fileio.h>
+#include <sys/tarfs.h> 	
+
+
+//extern struct files_list* flist_head;
+
+
+size_t kread(char *filename,size_t count,void* buf)
+{
+/*	struct files_list* f=flist_head;
+	while(f->next!=NULL)
+	{	
+		if(strcmp(filename,f->name)==0)
+		{
+			memcpy((f->addr+f->offset),buf,count);
+			f->offset=f->offset+(int)count;
+			return count;
+		}	
+	}
+	*/
+	return 0;
+
+}

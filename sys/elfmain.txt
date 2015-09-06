@@ -1,0 +1,81 @@
+#include <sys/elf.h>
+#include <sys/tarfs.h>
+#include<sys/defs.h>
+#include <sys/sbunix.h>
+#include<string.h>
+
+/*
+uint64_t atoi(char *str)
+{
+    uint64_t res = 0; // Initialize result
+ 
+    // Iterate through all characters of input string and update result
+    for (int i = 0; str[i] != '\0'; ++i)
+        res = res*10 + str[i] - '0';
+ 
+    // return result.
+    return res;
+}
+
+*/
+
+/*
+uint64_t pow(int base,int power)
+{
+	 int i = 0; 
+	uint64_t product = 1;
+
+   	 for(i = 0; i < power; ++i) {
+        	product = product * base;
+   	 }
+
+    return product;
+
+}
+
+*/
+uint64_t o2d(uint64_t num)
+{
+	int decimal=0;
+	int rem;
+	int i=0	;
+	while(num!=0)
+	{
+		rem=num%10;
+		num=num/10;
+		decimal=decimal+(rem*pow(8,i));
+		i++;
+	}
+	return decimal;
+
+}
+
+void read_elf(char *filename)
+{
+	Elf64_Ehdr* elfheader = (Elf64_Ehdr*)fileaddress(filename);
+	printf("%d",elfheader->e_phnum);
+}
+void* fileaddress(char*filename)
+	{
+		
+		 int size=0;
+		struct posix_header_ustar *header= (struct posix_header_ustar*)&_binary_tarfs_start;
+		do
+		{    printf("%s\n",header->name);
+			size=o2d(atoi(header->size));
+			if(strcmp(filename,header->name)==0)
+				return (void*)(header+1);
+			if(size==0)
+				header=header+1;
+				else
+					header = header + size/ (sizeof(struct posix_header_ustar) + 1) + 2;
+		}while(header<(struct posix_header_ustar*)&_binary_tarfs_end);
+			  
+					//while(1);
+	
+		return NULL;
+		
+	}
+
+
+	

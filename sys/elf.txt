@@ -1,0 +1,141 @@
+
+/*
+#include <sys/elf.h>
+#include <sys/tarfs.h>
+#include<sys/defs.h>
+#include <sys/sbunix.h>
+#include<string.h>
+
+
+void readelf(char *filename)
+{
+	Elf64_Ehdr* elfheader = (Elf64_Ehdr*)fileaddress(filename);
+	Elf64_Phdr* prog_header=(Elf64_Phdr*)((void*)elfheader + elfheader->e_phoff);
+	unit64_t= fileaddress(filename);
+	 uint64_t start_vaddr;
+	 //end_vaddr;
+	 
+   int size;
+	int i=0;
+	while(i<elfheader->e_phnum)
+	{    //if (i==1)
+		{
+			 start_vaddr    = prog_header->p_vaddr;
+            //size           = program_header->p_memsz;
+            //end_vaddr      = start_vaddr + size
+			__asm__ __volatile__ ("movq %0, %%rax;" 
+								:
+								: "r"(start_vaddr-0xFFFFFFFF80000000));
+								printf("enteredloop");
+			
+		}
+		
+		printf("\n Type of Segment: %d",prog_header->p_type);
+		printf("\n Type of Segment: %d",prog_header->p_flags);
+		prog_header=prog_header+1;
+		i++;
+	}
+	i=0;
+	 Elf64_Shdr* section_header =  (Elf64_Shdr*)((void *) elfheader + elfheader->e_shoff);
+	// Elf64_Shdr* section_table =  (Elf64_Shdr*)((void *) elfheader + elfheader->e_shstrndx);
+	 Elf64_Shdr* table_header_section = (Elf64_Shdr*)((void *) section_header + (elfheader->e_shentsize * elfheader->e_shstrndx)); 
+    char* section_name_table = (char*)((void *) elfheader + table_header_section->sh_offset);
+	// Elf64_Shdr* section_table =  (Elf64_Shdr*)(elfheader->e_shstrndx);
+	 while(i<elfheader->e_shnum)
+	 {//if (section_header->sh_type==SHT_STRTAB)
+		// printf("\n%s",(section_header+section_header->sh_name));
+		 //printf("\n%s",(char*)((void*)(elfheader->e_shstrndx)+(void*)section_header->sh_name));
+		 char* section_name = (char*)((void *) section_name_table + section_header->sh_name); 
+		 section_header++;
+		
+		 printf("%s\n",section_name);
+		  i++;
+	 }
+	
+}
+
+
+
+int atoi(char *str)
+{
+    int res = 0; // Initialize result
+
+    // Iterate through all characters of input string and update result
+    for (int i = 0; str[i] != '\0'; ++i)
+        res = res*10 + str[i] - '0';
+
+    // return result.
+    return res;
+}
+
+int pow(int base, int power)
+{ 
+    int i = 0, product = 1;
+
+    for (i = 0; i < power; ++i) {
+        product = product * base;
+    }
+
+    return product;
+}
+int o2d(int n) 
+{
+    int dec = 0, i = 0, rem; 
+ 
+    while (n != 0) { 
+        rem = n % 10; 
+        n /= 10; 
+        dec += rem * pow(8, i);
+        ++i;
+    }
+    return dec;
+}
+
+	
+	
+	void* fileaddress(char*filename)
+	{
+		
+		 int size=0;
+		struct posix_header_ustar *header= (struct posix_header_ustar*)&_binary_tarfs_start;
+		do
+		{    printf("%s\n",header->name);
+			size=o2d(atoi(header->size));
+			if(strcmp(filename,header->name)==0)
+				return (void*)(header+1);
+			if(size==0)
+				header=header+1;
+				else
+					header = header + size/ (sizeof(struct posix_header_ustar) + 1) + 2;
+		}while(header<(struct posix_header_ustar*)&_binary_tarfs_end);
+			  
+					while(1);
+	
+		return NULL;
+		
+	}
+		*/			
+		/*int si = atoi(header->size);
+		printf("%s",(header)->name);
+		printf("%d",si);
+		header=header+1;
+		printf("%s\n",(header)->size);
+		printf("%s",(header->name));
+		printf("%d\n",(atoi(header->size)));
+		
+		
+		header = (struct posix_header_ustar *)((char*)header+(atoi(header->size)));
+		//header = header + o2d(atoi(header->size))/ (sizeof(struct posix_header_ustar) + 1) + 2;
+		printf("%p\n",header);
+		//header = (struct posix_header_ustar *)((char*)header+512);
+		//header = (struct posix_header_ustar *)((char*)header+1);
+		//printf("%p\n",header);
+		printf("%s",(header->name));
+		printf("%s",(header->size));
+		
+		//printf("Amit");
+	}
+	*/
+	
+	
+	

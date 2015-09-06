@@ -1,0 +1,1 @@
+void irq_install_handler(int irq, void (*handler)( regs *r));

@@ -1,0 +1,219 @@
+#include <sys/tarfs.h> 	
+#include <sys/defs.h>
+#include <sys/utilities.h>
+#include <sys/memory.h>	
+#define VADDR 0xFFFFFFFF80000000
+struct files_list* flist_head=NULL;
+
+uint64_t atoi(char *str)
+{
+    uint64_t res = 0; // Initialize result
+ 
+    // Iterate through all characters of input string and update result
+    for (int i = 0; str[i] != '\0'; ++i)
+        res = res*10 + str[i] - '0';
+ 
+    // return result.
+    return res;
+}
+
+void strcpy(char* dest,const char* src)
+{
+	//char *point= dest;
+
+	//return point;
+
+	while ((*dest++ = *src++) != '\0')          
+	;
+	//return point;
+}
+
+int strcmp(char *s, const char *t)
+{
+       int i;
+       for (i = 0; s[i] == t[i]; i++)
+        if (s[i] == '\0')
+        return 0;
+       return s[i] - t[i];
+ }
+
+
+uint64_t pow(int base,int power)
+{
+	 int i = 0; 
+	uint64_t product = 1;
+
+   	 for(i = 0; i < power; ++i) {
+        	product = product * base;
+   	 }
+
+    return product;
+
+}
+
+
+uint64_t octalToDecimal(uint64_t num)
+{
+	int decimal=0;
+	int rem;
+	int i=0	;
+	while(num!=0)
+	{
+		rem=num%10;
+		num=num/10;
+		decimal=decimal+(rem*pow(8,i));
+		i++;
+	}
+	return decimal;
+
+}
+void init_tarfs()
+{
+	uint64_t file_size=0;int filedes=3;
+	
+	//struct files_list* lpoint=(struct files_list*)(allocate_page()+VADDR);
+	 struct files_list* lpoint=flist_head;
+	HEAD_USTAR *header = (HEAD_USTAR*) &_binary_tarfs_start;
+	while(header<(HEAD_USTAR*)&_binary_tarfs_end)
+	{	
+		if(header->name == NULL)
+			break;
+		struct files_list* f=(struct files_list*)(allocate_page()+VADDR);
+		
+		file_size=(uint64_t)octalToDecimal(atoi(header->size));
+		//printf("Name:%s",header->name);
+		strcpy(f->name,header->name);
+		f->size=file_size;
+		f->fd=filedes;
+		filedes++;
+		f->offset=0;
+		f->next=NULL;
+		f->addr=(void*)(header+1);		
+
+
+		if(flist_head==NULL)
+		{
+			/*strcpy(flist_head->name,header->name);
+			flist_head->size=file_size;
+			flist_head->fd=filedes;
+			filedes++;
+			flist_head->offset=0;
+			flist_head->next=NULL;
+			flist_head->addr=(void*)(header+1);*/
+			flist_head=f;
+			lpoint=flist_head;
+							
+			//flist_head;
+			
+		}
+		
+			
+		else{
+			
+			//while(1);
+			lpoint->next=f;
+			lpoint=lpoint->next;
+
+		}
+		//printf("Name:%s",lpoint->name);	
+		if(file_size>0)
+		{
+			header=header + file_size / (sizeof(HEAD_USTAR) + 1) + 2;
+			printf("Greater than zero :Name:%s\n",lpoint->name);
+			//while(1);
+			
+		}
+
+		else
+		{	header=header+1;
+		//printf("Name:%s\n",lpoint->name);	}	
+		
+		//printf("Name:%s",f->name);
+		//while(1);
+				
+	
+	}
+	}
+	printf("out");
+//while(1);
+}
+
+
+void* lookup(char* filename)
+{
+	HEAD_USTAR *header = (HEAD_USTAR*) &_binary_tarfs_start;
+	printf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
+	int file_size=0;
+	while(header<(HEAD_USTAR*)&_binary_tarfs_end)
+	{
+		file_size=octalToDecimal(atoi(header->size));
+		if(strcmp(filename,header->name)==0)
+		{
+			printf("Found! Filenameis %s\n",header->name);
+			return (void*)(header+1);
+		}
+		if(file_size>0)
+		{
+			header=header + file_size / (sizeof(HEAD_USTAR) + 1) + 2;
+			
+		}
+
+		else
+			header=header+1;
+	
+	}
+	
+	printf("Nothing!\n");
+	return NULL;
+}
+
+
+int open(char *filename)
+{
+	printf("%s\n",filename);	
+	struct files_list* lpoint=flist_head;
+	while(lpoint->next!=NULL)
+	{	printf("file:%s\n",lpoint->name);
+	if(strcmp(filename,lpoint->name)==0)
+	{
+		printf("Found! Filenameis %s\n",lpoint->name);
+		return lpoint->fd;
+	}
+	lpoint = lpoint->next;
+	}
+	return -1;
+	
+}
+
+size_t read(char *filename,size_t count,void* buf)
+{     char ch;
+int i=0;
+	struct files_list* f=flist_head;
+	while(f->next!=NULL)
+	{	
+		if(strcmp(filename,f->name)==0)
+		{    while(f->size>0)
+			{
+				ch= *(char*)(f->addr+i);
+				printf("%c",ch);
+				f->size--;
+				i++;
+			}
+			memcpy((f->addr+f->offset),buf,count);
+			f->offset=f->offset+(int)count;
+			return count;
+		}
+        f=f->next;		
+	}
+	return 0;
+
+}
+
+
+
+
+
+
+
+
+
